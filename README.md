@@ -18,10 +18,11 @@ A simple Extension to Yii2 GridView to enable simple editable columns
   update from the filter field.
   
   Alternatively, you can specify the field name in the column definition
- 	[
- 	    'value'=>'caption',
+  
+	 [
+	     'value'=>'caption',
 	    'contentOptions'=>['class'=>'editColumn', 'data-column'=>'caption']
- 	,
+	 ],
  
   Full use example:-
   view:
