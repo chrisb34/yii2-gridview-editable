@@ -6,6 +6,8 @@ yii2-gridview-editable
  This is not yet on composer, so in the meatime, you can download and install 
  it manually.  I suggest that you place it in project_name/common or some similar
  directory and change the "use" statement to point to the directory.
+ 
+ Demo available here: http://yii2-demos.chris-backhouse.com/photo
 
  GridViewEditable extends the standard Yii2 GridView to give very basic
   text editing.  It does not provide dropdowns, checkboxes etc, just 
