@@ -59,7 +59,7 @@ yii2-gridview-editable
 		    if (Yii::$app->getRequest()->isAjax)
 			    return Json::encode (['status'=> true]);
 			else 
-			    return Json::encode (['status'=> false, 'message'=>'Save Failed']);
+			    return $this->redirect(['view', 'id' => $model->id]);
 	        } else {
 	            return $this->render('update', [
 	                'model' => $model,
