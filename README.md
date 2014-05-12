@@ -68,4 +68,6 @@ yii2-gridview-editable
 	            ]);
 	        }
 	    }
+	    
+  You can contact me at support AT chris-backhouse dot com	    
   
