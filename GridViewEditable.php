@@ -1,5 +1,4 @@
 <?php
-
 /**
  * GridViewEditable extends the standard Yii2 GridView to give very basic
  * text editing.  It does not provide dropdowns, checkboxes etc, just 
@@ -58,111 +57,96 @@
         }
     }
  * 
+ * 
  *
  * @author Chris Backhouse <support@chris-backhouse.com>
  * @package GridViewEditable
+ * @licence: Open Source
+ * @url: https://github.com/chrisb34/yii2-gridview-editable
  * @since 0.1
  */
 
-namespace app\common;
+namespace common\components;
 
 use Yii;
 use yii\helpers\Html;
+use yii\web\View;
 use yii\grid\gridview;
+use common\components\gridViewEditableAsset;
 
 class GridViewEditable extends \yii\grid\GridView {
-	public $colorSuccess='#18CC00';
-	public $colorFailure='#FCB0B0';
-	public $timeOut=2000;
-	public $updateUrl='';
-        public $isEditable=true;
+    public $id;
+    public $colorSuccess = '#5cb85c';
+    public $colorFailure = '#FCB0B0';
+    public $timeOut = 2000;
+    public $includeKey = true;
+    public $updateUrl = '';
+    public $createUrl = '';
+    public $refreshUrl = '';
+    public $deleteUrl = '';
+    public $isEditable = true;
+    public $tableClass = 'div.grid-view table.table';
+    public $otherPostData = '';
+    public $options;
+
+    public function init() {
+
+        $this->options = [ 'id' => $this->id, 'class'=>'gridview'];
+        $this->buildJS();
+        parent::init();
+    }
+
+    public function buildJS() {
+       $this->registerAssets();
+       
+       $view = $this->getView();
+       $od = \json_encode($this->otherPostData);
+       $ik = ($this->includeKey) ? 'true' : 'false';
+       
+       $js1 = " var gdv_{$this->id} = new editableGridview('gdv_{$this->id}'); ";
+       $js2 = " 
+            gdv_{$this->id}.tableClass = '{$this->tableClass}';
+            gdv_{$this->id}.hisId = '#{$this->id}';
+            gdv_{$this->id}.csrfToken = '".Yii::$app->getRequest()->getCsrfToken()."';
+            gdv_{$this->id}.updateUrl = '{$this->updateUrl}';
+            gdv_{$this->id}.createUrl = '{$this->createUrl}';
+            gdv_{$this->id}.deleteUrl = '{$this->deleteUrl}';
+            gdv_{$this->id}.refreshUrl = '{$this->refreshUrl}';
+            gdv_{$this->id}.colorSuccess = '{$this->colorSuccess}';
+            gdv_{$this->id}.colorFailure = '{$this->colorFailure}';
+            gdv_{$this->id}.varTimeout = {$this->timeOut};
+            gdv_{$this->id}.otherPostData = {$od};
+            gdv_{$this->id}.includeKey = {$ik};
+            gdv_{$this->id}.gridview = $('#{$this->id}');
         
-	public function init() {
-    
-	    $this->buildJS();
-	    parent::init();
-	}
-	
-	public function buildJS() {
-	   $view = $this->getView();
-	   $view->registerJs("
-		    function drawEditor(el) {
-			el=$(el);
-			if (el.attr('class')!='editColumn' | el.children('.inplace-editor').size() > 0 ) return false; //|
 
-			wd=el.width();
-			txt=el.text();
+            $('#{$this->id}').on('click', 'td.editColumn', function() {gdv_{$this->id}.drawEditor(this);});
+            $('#{$this->id}').on('blur', ' td.editColumn', function() {gdv_{$this->id}.drawText(this);});
+            $('#{$this->id}').on('click', '.add-new', function() {gdv_{$this->id}.addRow(this);});
+            $('#{$this->id}').on('click', ' .editable-grid-newrow button', function(e) {
+                e.preventDefault();
+                gdv_{$this->id}.addRowSave($(this).closest('tr'));
+                });
+            $('#{$this->id}').on('click', ' a.delete', function(e) {
+                e.preventDefault();
+                gdv_{$this->id}.deleteRow(this);
+            });
 
-			var t = $(\"<span class='inplace-editor'><textarea class='inEdit'/></textarea></span>\");
-			el.html(t);
+            \$grid = $('#{$this->id}');
+            \$grid.data('name','gdv_{$this->id}');
 
-			var input = el.find('textarea');
-			input
-			    .val(txt)
-			    .attr('rows',parseInt(el.height()/19))
-			    .width(wd)
-			    .focus()
-			    .select();
-		    }
-		    function createTimeoutHandler(el) {
-			return function() { el.attr('style', 'background: none'); };
-		    }
+        ";
+       
+        $view->registerJs($js1, View::POS_END);
+        $view->registerJs($js2, View::POS_READY);
 
-		    function updateDb(el) {
-			el=$(el);
-			data=el.find('.inEdit').val();
-			if (data==undefined) return false;
-			idx=$(el).parent().index();
-			col=el.index();
-			//go up the DOM to the parent grid-view and then down the DOM to find the keys
-			//key=$.fn.yiiGridView.getSelection('properties-grid')[0];  // this is tidy but relies on the row being selected
-			//key=el.parents('.grid-view').find('.keys').children()[idx].textContent;
-			key=$(el).parent().data('key');
-		        //check to see if the grid has filters - then we can get the column names from there
-			if ( $('#{$this->id} .filters').length ) {
-			    cell=col=$('#".$this->id."').find('.filters').children()[col];
-			    field=$(cell).children()[0].name;
-			} else {
-			    // otherwise we have to rely on the user defining the data-name in the column
-			    field=el.data('column');
-			}
-			console.log('field name: '+field);
-			var postData={};
-			postData[field]=data;
-			postData['".Yii::$app->getRequest()->getCsrfToken()."']='".Yii::$app->getRequest()->getCsrfToken()."';
-			postData['json']=true;
-			$.ajax({
-			    url: '".$this->updateUrl."'+key,
-			    data: $.param(postData),
-			    type: 'POST'
-			    })
-			    .done(function(data) {
-				console.log(data);
-				pdata=$.parseJSON(data);
-				if (pdata.status || pdata.status=='true' || pdata.status=='ok') {
-				    el.attr('style','background: ".$this->colorSuccess."');
-				    setTimeout( createTimeoutHandler(el), ".$this->timeOut.");
-				} else {
-				    el.attr('style','background: ".$this->colorFailure."');
-				}
-			    });
-			return data;
-		    }
-		    function drawText(el) {
-			el=$(el);
-			if (el.children('.inplace-editor')) {
-			    data=el.find('.inEdit').val();
-			    if (data!=undefined) {
-				d=updateDb(el);
-				el.html( d );
-			    }
-			}
-		    }
-
-		    $('div.grid-view table.table td.editColumn').on('click', function() {drawEditor(this);});
-		    $('div.grid-view table.table').on('blur', ' td.editColumn', function() {drawText(this);});
-
-		    ",$view::POS_READY);
-
-	}
+    }
+    /**
+     * Registers the needed assets
+     */
+    public function registerAssets()
+    {
+        $view = $this->getView();
+        gridViewEditableAsset::register($view);
+    }
 }
