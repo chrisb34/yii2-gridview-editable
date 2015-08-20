@@ -1,6 +1,8 @@
 yii2-gridview-editable
 ======================
 
+ NOTE:  This is not yet stable - BETA version
+ 
  A simple Extension to Yii2 GridView to enable simple editable columns
  
  This is not yet on composer, so in the meatime, you can download and install 
