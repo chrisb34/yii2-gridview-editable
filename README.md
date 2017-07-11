@@ -71,6 +71,6 @@ yii2-gridview-editable
 	        }
 	    }
 	    
-  You can contact me at support AT chris-backhouse dot com	    
+  See http://yii2.chris-backhouse.com for more details    
   
   Requires color-picker jquery plugin (http://colpick.com) for color-picker editable control
